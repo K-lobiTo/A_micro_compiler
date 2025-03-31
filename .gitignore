@@ -1,0 +1,11 @@
+#Ignore everything but files with an extension
+*
+!*/
+!*.*
+
+#Just in case
+!.gitignore 
+
+#Ignore this extension
+*.out
+*.o
