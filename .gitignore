@@ -3,11 +3,12 @@
 !*/
 !*.*
 
+#exceptions
+!makefile
+
 #Just in case
 !.gitignore 
 
 #Ignore this extensions
 *.out
 *.o
-
-#makefile
