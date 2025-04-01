@@ -1,5 +1,5 @@
-#ifndef nodeh
-#define nodeh
+#ifndef NODE_H
+#define NODE_H
 
 typedef struct TrieNode {
     struct TrieNode *children[26];

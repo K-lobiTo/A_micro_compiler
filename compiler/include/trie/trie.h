@@ -1,5 +1,5 @@
-#ifndef trieh
-#define trieh
+#ifndef TRIE_H
+#define TRIE_H
 
 #include "node.h"
 
