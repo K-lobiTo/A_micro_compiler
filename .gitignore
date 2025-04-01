@@ -6,6 +6,8 @@
 #Just in case
 !.gitignore 
 
-#Ignore this extension
+#Ignore this extensions
 *.out
 *.o
+
+#makefile
