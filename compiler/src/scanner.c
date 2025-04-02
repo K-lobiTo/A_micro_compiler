@@ -62,7 +62,6 @@ Token next_token(Scanner* s) {
         else if (strcmp(ident, "end") == 0) token.type = TOKEN_END;
         else if (strcmp(ident, "write") == 0) token.type = TOKEN_WRITE;
         else if (strcmp(ident, "read") == 0) token.type = TOKEN_READ;
-        else if (strcmp(ident, "i") == 0) token.type = TOKEN_INT_DCL;
         else {
             token.type = TOKEN_ID;
             strncpy(token.lexeme, ident, 31); // token lexeme size might need to be changed  (+1)

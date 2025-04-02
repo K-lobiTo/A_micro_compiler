@@ -9,7 +9,6 @@ typedef enum { // Maybe something is missing [check later]
     TOKEN_INT,
     TOKEN_SEMICOLON,
     TOKEN_ID,
-    TOKEN_INT_DCL,
     TOKEN_READ,
     TOKEN_WRITE,
     TOKEN_ASSIGN,
