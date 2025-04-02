@@ -20,7 +20,7 @@ typedef enum { // Maybe something is missing [check later]
 
 typedef struct {
     TokenType type;
-    char lexeme[32]; // max token value size [might need to be increased]
+    char lexeme[33]; // extra char for '\0'
 } Token;
 
 typedef struct {
