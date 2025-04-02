@@ -53,7 +53,7 @@ Token next_token(Scanner* s) {
     else if (isalpha(peek(s))) { //currently includes uppercase letters, numbers too (not at start)
         char ident[32];
         int i = 0;
-        while (isalnum(peek(s)) && i < 31) { // token lexeme size might need to be changed  (+1)
+        while (isalnum(peek(s)) && i < 32) {
             ident[i++] = advance(s);
         }
         ident[i] = '\0';
@@ -64,15 +64,16 @@ Token next_token(Scanner* s) {
         else if (strcmp(ident, "read") == 0) token.type = TOKEN_READ;
         else {
             token.type = TOKEN_ID;
-            strncpy(token.lexeme, ident, 31); // token lexeme size might need to be changed  (+1)
+            // strncpy(token.lexeme, ident, 32); // [this was passed down momentarily]
         }
+        strncpy(token.lexeme, ident, 32); // saving lexeme for all (just for debbugin facilities)
     }
     else {
         switch (advance(s)) {
-            case '=': token.type = TOKEN_ASSIGN; break;
-            case '+': token.type = TOKEN_PLUS; break;
-            case ';': token.type = TOKEN_SEMICOLON; break;
-            default: token.type = TOKEN_ERROR;
+            case '=': token.type = TOKEN_ASSIGN; strncpy(token.lexeme, "=", 32); break;
+            case '+': token.type = TOKEN_PLUS; strncpy(token.lexeme, "+", 32); break;
+            case ';': token.type = TOKEN_SEMICOLON; strncpy(token.lexeme, ";", 32);break;
+            default: token.type = TOKEN_ERROR; strncpy(token.lexeme, "!ERR", 32); break;; 
         }
     }
     return token;
