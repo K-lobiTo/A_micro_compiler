@@ -1,4 +1,4 @@
-#include "node.h"
+#include "../../include/trie/node.h"
 #include <stdlib.h>
 
 TrieNode* create_node(){

@@ -1,4 +1,4 @@
-#include "trie.h"
+#include "../../include/trie/trie.h"
 #include <string.h> //hopefully we can use this lib for the assignment 
 
 void insert(Trie *trie, const char *word){
