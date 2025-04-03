@@ -1,0 +1,39 @@
+Guide of the modified Context-free grammar for the language
+
+Prog: program
+Code: code 
+Dcls: declarations
+Dcl: declare
+id: identifier
+sc: semicolon 
+Stmts: statements
+Stmt: statement
+Expr: expression
+Val: value
+plus: plus +
+assign: designate a value 
+begin: begin of program
+end: end of program
+
+
+    0 Prog -> begin Code end $
+    1 Code -> Dcls Stmts Dcls 
+    2 | λ 
+    3 Dcls -> Dcl Dcls
+    4 | λ
+    5 Dcl -> id sc
+    6
+    | Stmt
+    7 Stmts -> Stmt Stmts
+    8
+    | λ
+    9 Stmt -> id assign Val Expr sc
+    10
+    | print id
+    11 Expr -> plus Val Expr
+    12
+    | λ
+    13 Val -> id
+    14
+    | inum
+
