@@ -25,6 +25,30 @@ static Token scan_digits(Scanner* s) {
     return token;
 }
 
+
+const char* token_type_to_string(TokenType type) {
+    static const char* names[] = {
+        [TOKEN_BEGIN] = "TOKEN_BEGIN",
+        [TOKEN_END] = "TOKEN_END",
+        [TOKEN_ID] = "TOKEN_ID",
+        [TOKEN_INT] = "TOKEN_INT",
+        [TOKEN_READ] = "TOKEN_READ",
+        [TOKEN_WRITE] = "TOKEN_WRITE",
+        [TOKEN_ASSIGN] = "TOKEN_ASSIGN",
+        [TOKEN_PLUS] = "TOKEN_PLUS",
+        [TOKEN_SEMICOLON] = "TOKEN_SEMICOLON",
+        [TOKEN_COMMENT] = "TOKEN_COMMENT",
+        [TOKEN_EOF] = "TOKEN_EOF",
+        [TOKEN_ERROR] = "TOKEN_ERROR"
+    };
+
+    // Handle invalid type values
+    if (type >= sizeof(names)/sizeof(names[0]) || names[type] == NULL) {
+        return "TOKEN_UNKNOWN";
+    }
+    return names[type];
+}
+
 // Not really necessary anymore
 // int isletter(char c){
 //     return (c>=97 && c<=122);
