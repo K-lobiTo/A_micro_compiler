@@ -70,6 +70,12 @@ Token next_token(Scanner* s) {
     }
     else {
         switch (advance(s)) {
+            case '-': {
+                token.type = TOKEN_COMMENT;
+                strncpy(token.lexeme, "-", 32);
+                while (peek(s)!='\n' && peek(s)!='\0')advance(s);
+                break;
+            }
             case '=': token.type = TOKEN_ASSIGN; strncpy(token.lexeme, "=", 32); break;
             case '+': token.type = TOKEN_PLUS; strncpy(token.lexeme, "+", 32); break;
             case ';': token.type = TOKEN_SEMICOLON; strncpy(token.lexeme, ";", 32);break;
