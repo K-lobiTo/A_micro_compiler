@@ -68,10 +68,15 @@ void parse_expression(Parser* p) {
 }
 
 void parse_program(Parser* p) {
-    // maybe we should match comments here, before the begin;
+    while (p->current_token.type == TOKEN_COMMENT) {
+        match(p, TOKEN_COMMENT);
+    } 
     match(p, TOKEN_BEGIN);
     while (p->current_token.type != TOKEN_END) {
         parse_statement(p);
     }
     match(p, TOKEN_END);
+    while (p->current_token.type == TOKEN_COMMENT) {
+        match(p, TOKEN_COMMENT);
+    } 
 }
