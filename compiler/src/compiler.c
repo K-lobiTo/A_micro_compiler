@@ -22,7 +22,7 @@ int main() {
 
     while (actToken.type != TOKEN_EOF){ // for testing [works as expected]
         actToken = next_token(&sc);
-        printf("TokenType %zu: Lexeme: %s\n", actToken.type, actToken.lexeme);
+        printf("TokenType %s: Lexeme: %s\n", token_type_to_string(actToken.type), actToken.lexeme);
     }
     
     free(source);

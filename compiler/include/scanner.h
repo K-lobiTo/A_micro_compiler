@@ -32,5 +32,6 @@ typedef struct {
 void scanner_init(Scanner* s, const char* source);
 
 Token next_token(Scanner* s);
+const char * token_type_to_string(TokenType type);
 
 #endif
