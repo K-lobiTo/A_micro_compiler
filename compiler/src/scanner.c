@@ -50,7 +50,7 @@ const char* token_type_to_string(TokenType type) {
 }
 
 // Not really necessary anymore
-// int isletter(char c){
+// int isaphamin(char c){
 //     return (c>=97 && c<=122);
 // }
 
@@ -74,10 +74,10 @@ Token next_token(Scanner* s) {
     } else if (isdigit(peek(s))) {
         token = scan_digits(s);
     }
-    else if (isalpha(peek(s))) { //currently includes uppercase letters, numbers too (not at start)
+    else if (islower(peek(s))) { // includes only lower letters
         char ident[32];
         int i = 0;
-        while (isalnum(peek(s)) && i < 32) {
+        while (islower(peek(s)) && i < 32) {
             ident[i++] = advance(s);
         }
         ident[i] = '\0';
