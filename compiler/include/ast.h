@@ -1,64 +1,42 @@
-#ifndef AST.H
-#define AST.H
+#ifndef AST_H
+#define AST_H
 
-#include "./trie/trie.h"
-#include "parser.h"
-
-typedef enum {
-    AST_PROGRAM,
-    AST_LITERAL,
-    AST_BINOP,
-    AST_ASSIGN,
-    AST_READ,
-    AST_WRITE,
-    AST_DECLARATION,
-    AST_ASSIGNMENT,
-    AST_ID
-} ASTNodeType;
+typedef enum NodeType {
+    PROGRAM_NODE,
+    STMT_NODE,
+    ASSIGN_NODE,
+    READ_NODE,
+    WRITE_NODE,
+    EXPR_NODE,
+    ID_NODE,
+    VALUE_NODE
+} NodeType;
 
 typedef struct ASTNode {
-    ASTNodeType type;
+    NodeType type;
     union {
-        // For literals (int values)
-        int int_value;
-        
-        // For variables
-        char var_name[33];
-
-        // For declarations
-        struct {
-            char var_name[33];
-            int is_initialized;  // 0 = declaration only, 1 = with assignment
-            ASTNode* initializer;  // NULL if just declaration
-        } decl;
-        
-        // For binary operations 
-        struct {
-            struct ASTNode* left;
-            struct ASTNode* right;
-            char op; // '+'
-        };
-        
-        // For statements
-        struct {
-            struct ASTNode** statements; // Program or block
-            size_t statement_count;
-        };
-
+        struct { struct ASTNode *first; struct ASTNode *rest; } stmt;
+        struct { char *id; struct ASTNode *expr; } assign;
+        struct { char *id; } read;
+        struct { struct ASTNode *expr; } write;
+        struct { 
+            struct ASTNode *left;
+            struct ASTNode *right;
+        } expr;
+        int value;
+        char *id;
     };
 } ASTNode;
 
-ASTNode* ast_new_program();
-ASTNode* ast_new_assignment(char* var, ASTNode* expr);
-ASTNode* ast_new_declaration(const char* var, ASTNode* initializer);
-ASTNode* ast_new_literal(int value);
-ASTNode* ast_new_variable(char* name);
-ASTNode* ast_new_binop(ASTNode* left, char op, ASTNode* right);
-void ast_free(ASTNode* node);
+ASTNode* create_program(ASTNode *stmts);
+ASTNode* create_stmt_seq(ASTNode *first, ASTNode *rest);
+ASTNode* create_assign(char *id, ASTNode *expr);
+ASTNode* create_read(char *id);
+ASTNode* create_write(ASTNode *expr);
+ASTNode* create_id(char *name);
+ASTNode* create_value(int value);
+ASTNode* create_plus(ASTNode *left, ASTNode *right);
 
+void print_ast(ASTNode* node, int depth);
 
 #endif
-
-
-
-

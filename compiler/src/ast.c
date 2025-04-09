@@ -1,167 +1,111 @@
-
-
-#include "../include/ast.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "../include/ast.h"
 
-// ---------------------------
-// AST Node Constructors
-// ---------------------------
-
-ASTNode* ast_new_program() {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = AST_PROGRAM;
-    node->statements = NULL;
-    node->statement_count = 0;
+ASTNode* create_program(ASTNode* stmts) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = PROGRAM_NODE;
+    node->stmt.first = stmts;
+    node->stmt.rest = NULL;
     return node;
 }
 
-ASTNode* ast_new_assignment(const char* var, ASTNode* expr) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = AST_ASSIGN;
-    strncpy(node->var_name, var, 31);
-    node->var_name[32] = '\0';
-    node->left = expr;  // Reusing 'left' for the expression
+ASTNode* create_stmt_seq(ASTNode* first, ASTNode* rest) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = STMT_NODE;
+    node->stmt.first = first;
+    node->stmt.rest = rest;
     return node;
 }
 
-ASTNode* ast_new_read(const char* var) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = AST_READ;
-    strncpy(node->var_name, var, 31);
-    node->var_name[32] = '\0';
+ASTNode* create_assign(char* id, ASTNode* expr) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = ASSIGN_NODE;
+    node->assign.id = id;
+    node->assign.expr = expr;
     return node;
 }
 
-ASTNode* ast_new_write(ASTNode* expr) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = AST_WRITE;
-    node->left = expr;  // Reusing 'left' for the expression
+ASTNode* create_read(char *id) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = READ_NODE;
+    node->read.id = id;
     return node;
 }
 
-ASTNode* ast_new_variable(const char* name) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = AST_ID;
-    strncpy(node->var_name, name, 31);
-    node->var_name[32] = '\0';
+ASTNode* create_write(ASTNode *expr) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = WRITE_NODE;
+    node->write.expr = expr;
     return node;
 }
 
-ASTNode* ast_new_literal(int value) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = AST_LITERAL;
-    node->int_value = value;
+ASTNode* create_id(char* id) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = ID_NODE;
+    node->id = id;
     return node;
 }
 
-ASTNode* ast_new_binop(ASTNode* left, char op, ASTNode* right) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = AST_BINOP;
-    node->left = left;
-    node->right = right;
-    node->op = op;
+ASTNode* create_value(int value) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = VALUE_NODE;
+    node->value = value;
     return node;
 }
 
-ASTNode* ast_new_declaration(const char* var, ASTNode* initializer) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->type = AST_DECLARATION;
-    strncpy(node->decl.var_name, var, 31);
-    node->decl.var_name[31] = '\0';
-    node->decl.is_initialized = (initializer != NULL);
-    node->decl.initializer = initializer;
+ASTNode* create_plus(ASTNode *left, ASTNode *right) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    node->type = EXPR_NODE;
+    node->expr.left = left;
+    node->expr.right = right;
     return node;
 }
-// ---------------------------
-// AST Manipulation
-// ---------------------------
 
-void ast_add_statement(ASTNode* program, ASTNode* statement) {
-    program->statements = realloc(program->statements, 
-                                sizeof(ASTNode*) * (program->statement_count + 1));
-    program->statements[program->statement_count++] = statement;
-}
-
-// ---------------------------
-// AST Destruction
-// ---------------------------
-
-void ast_free(ASTNode* node) {
+void print_ast(ASTNode* node, int depth) {
     if (!node) return;
-
-    switch (node->type) {
-        case AST_BINOP:
-            ast_free(node->left);
-            ast_free(node->right);
+    
+    for (int i = 0; i < depth; i++) printf("  ");
+    
+    switch(node->type) {
+        case PROGRAM_NODE:
+            printf("Program\n");
+            print_ast(node->stmt.first, depth + 1);
             break;
-        case AST_ASSIGN:
-        case AST_WRITE:
-            ast_free(node->left);  // Free the expression
+            
+        case STMT_NODE:
+            printf("Statement Sequence\n");
+            print_ast(node->stmt.first, depth + 1);
+            print_ast(node->stmt.rest, depth);
             break;
-        case AST_PROGRAM:
-            for (size_t i = 0; i < node->statement_count; i++) {
-                ast_free(node->statements[i]);
-            }
-            free(node->statements);
+            
+        case ASSIGN_NODE:
+            printf("Assign: %s\n", node->assign.id);
+            print_ast(node->assign.expr, depth + 1);
             break;
-        default:
-            break;  // No special cleanup for literals/variables
-    }
-    free(node);
-}
-
-// ---------------------------
-// AST Debugging
-// ---------------------------
-
-static const char* ast_type_to_string(ASTNodeType type) {
-    static const char* names[] = {
-        [AST_PROGRAM] = "PROGRAM",
-        [AST_ASSIGN] = "ASSIGN",
-        [AST_READ] = "READ",
-        [AST_WRITE] = "WRITE",
-        [AST_ID] = "VAR",
-        [AST_LITERAL] = "LITERAL",
-        [AST_BINOP] = "BINOP"
-    };
-    return names[type];
-}
-
-void ast_print(ASTNode* node, int indent) {
-    if (!node) return;
-
-    for (int i = 0; i < indent; i++) printf("  ");
-
-    switch (node->type) {
-        case AST_LITERAL:
-            printf("%s: %d\n", ast_type_to_string(node->type), node->int_value);
+            
+        case READ_NODE:
+            printf("Read: %s\n", node->read.id);
             break;
-        case AST_ID:
-            printf("%s: %s\n", ast_type_to_string(node->type), node->var_name);
+            
+        case WRITE_NODE:
+            printf("Write:\n");
+            print_ast(node->write.expr, depth + 1);
             break;
-        case AST_BINOP:
-            printf("%s: '%c'\n", ast_type_to_string(node->type), node->op);
-            ast_print(node->left, indent + 1);
-            ast_print(node->right, indent + 1);
+            
+        case EXPR_NODE:
+            printf("Expression: %c\n", '+');
+            print_ast(node->expr.left, depth + 1);
+            print_ast(node->expr.right, depth + 1);
             break;
-        case AST_ASSIGN:
-            printf("%s: %s\n", ast_type_to_string(node->type), node->var_name);
-            ast_print(node->left, indent + 1);
+            
+        case ID_NODE:
+            printf("Identifier: %s\n", node->id);
             break;
-        case AST_WRITE:
-            printf("%s:\n", ast_type_to_string(node->type));
-            ast_print(node->left, indent + 1);
+            
+        case VALUE_NODE:
+            printf("Number: %d\n", node->value);
             break;
-        case AST_PROGRAM:
-            printf("%s:\n", ast_type_to_string(node->type));
-            for (size_t i = 0; i < node->statement_count; i++) {
-                ast_print(node->statements[i], indent + 1);
-            }
-            break;
-        default:
-            printf("%s\n", ast_type_to_string(node->type));
     }
 }
