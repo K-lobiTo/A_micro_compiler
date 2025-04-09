@@ -16,22 +16,10 @@ Variable* variables = NULL;
 int var_count = 0;
 int current_index = 0;
 
-// void assign_idx_to_ids(TrieNode *trie, int *idx){
-//     if(trie->is_end){
-//         if(trie->type==ID_NODE){
-//             (*idx)++;
-//             trie->idx = *idx;
-//         }
-//         return;
-//     }
-//     for(int i = 0; i<ALPHABET_SIZE; ++i){
-//         if(trie->children[i]){
-//             assign_idx_to_ids(trie->children[i], *idx);
-//         }
-//     }
-// }
 
 void generate_expr(ASTNode* node, FILE* out, Trie* trie) {
+    fprintf(stderr, "\n generate_expr : %s\n", node_type_to_string(node->type));
+    // fprintf(stderr, "%d\n", node->value);
     switch(node->type) {
         case ID_NODE: {
             int idx = trie_search_idx(trie, node->id);
@@ -94,26 +82,25 @@ void generate_write(ASTNode* node, FILE* out, Trie* trie) {
     fprintf(out, "    int 0x80\n");
 }
 
-void generate_stmts(ASTNode* node, FILE* out, Trie* trie) {
+void generate_stmts(ASTNode* node, FILE* out, Trie* trie, int iter) {
     while(node) {
-        switch(node->type) {
-            case ASSIGN_NODE:
-                generate_assign(node, out, trie);
-                break;
-            case READ_NODE:
-                generate_read(node, out, trie);
-                break;
-            case WRITE_NODE:
-                generate_write(node, out, trie);
-                break;
-            case STMT_NODE:
-                generate_stmts(node->stmt.first, out, trie);
-                node = node->stmt.rest;
-                continue;
-            default:
-                fprintf(stderr, "Declaración inválida\n");
-                exit(EXIT_FAILURE);
+        fprintf(stderr, "\n iteracion: %d\n", iter);
+        fprintf(stderr, " Node type before change in end of generate_stmts: %s\n", node_type_to_string(node->type));
+        if (node->type != STMT_NODE) {
+            // Handle single statement
+            switch(node->type) {
+                case ASSIGN_NODE: generate_assign(node, out, trie); break;
+                case READ_NODE: generate_read(node, out, trie); break;
+                case WRITE_NODE: generate_write(node, out, trie); break;
+                default: 
+                    fprintf(stderr, "Invalid statement\n");
+                    exit(EXIT_FAILURE);
+            }
+            break;
         }
+        
+        // Handle statement sequence
+        generate_stmts(node->stmt.first, out, trie, iter + 1);
         node = node->stmt.rest;
     }
 }
@@ -172,7 +159,14 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fprintf(out, "    ret\n\n");
 
     fprintf(out, "_start:\n");
-    generate_stmts(node->stmt.first, out, trie);
+
+    // ASTNode* act = node->stmt.first;
+    // while (act){
+    //     fprintf(stderr, "Processing node type: %s\n", node_type_to_string(act->type));
+    //     act = act->stmt.rest;
+    // }
+    
+    generate_stmts(node->stmt.first, out, trie, 1);
 
     // Salida
     fprintf(out, "    mov eax, 1       ; sys_exit\n");
@@ -201,4 +195,18 @@ void assemble_and_run(const char* asm_file) {
     // Ejecutar
     snprintf(cmd, sizeof(cmd), "./%s", exec_file);
     system(cmd);
+}
+
+const char* node_type_to_string(NodeType type) {
+    static const char* names[] = {
+    [ PROGRAM_NODE ] = "PROGRAM_NODE",
+    [ STMT_NODE ] = "STMT_NODE",
+    [ ASSIGN_NODE ] = "ASSIGN_NODE",
+    [ READ_NODE ] = "READ_NODE",
+    [ WRITE_NODE ] = "WRITE_NODE",
+    [ EXPR_NODE ] = "EXPR_NODE",
+    [ ID_NODE ] = "ID_NODE",
+    [ VALUE_NODE ] = "VALUE_NODE"
+    };
+    return names[type];
 }
