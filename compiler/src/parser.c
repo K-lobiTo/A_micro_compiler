@@ -8,7 +8,6 @@ void match(Parser* p, TokenType expected) {
     if (p->current.type != expected) {
         fprintf(stderr, "Error sintáctico: Esperaba %s, obtuvo %s\n",
             token_type_to_string(expected), token_type_to_string(p->current.type));
-        fprintf(stderr, "Lexema: %s\n", p->current.lexeme);
         exit(EXIT_FAILURE);
     }
     p->current = next_token(p->scanner, p->trie);
@@ -71,7 +70,11 @@ ASTNode* parse_read(Parser* p) {
     match(p, TOKEN_READ);
     char* id = strdup(p->current.lexeme);
     match(p, TOKEN_ID);
-    trie_insert(p->trie, id, true, TOKEN_ID);
+    if (trie_search(p->trie, id) == TOKEN_ERROR) {
+        fprintf(stderr, "Error: Variable '%s' no declarada\n", id);
+        exit(EXIT_FAILURE);
+    }
+    // if (trie_search(p->trie, id) == TOKEN_ERROR) trie_insert(p->trie, id, true, TOKEN_ID);
     match(p, TOKEN_SEMICOLON);
     return create_read(id);
 }
