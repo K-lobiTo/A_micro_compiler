@@ -7,8 +7,6 @@
 
 
 void generate_expr(ASTNode* node, FILE* out, Trie* trie) {
-    // fprintf(stderr, "\n generate_expr : %s\n", node_type_to_string(node->type));
-    // fprintf(stderr, "%d\n", node->value);
     switch(node->type) {
         case ID_NODE: {
             int idx = trie_search_idx(trie, node->id);
@@ -47,7 +45,6 @@ void generate_read(ASTNode* node, FILE* out, Trie* trie) {
     fprintf(out, "    mov edx, 20\n");
     fprintf(out, "    int 0x80\n");
     
-    // Convertir a entero
     fprintf(out, "    call atoi\n");
     fprintf(out, "    mov [var_%d], eax\n", idx);
 }
@@ -56,14 +53,11 @@ void generate_write(ASTNode* node, FILE* out, Trie* trie) {
     fprintf(out, "    ;; WRITE\n");
     generate_expr(node->write.expr, out, trie);
     
-    // Convertir a string
     fprintf(out, "    call itoa\n");
     
-    // Calcular longitud
     fprintf(out, "    mov edi, eax\n");
     fprintf(out, "    sub edi, buffer\n");
     
-    // Escribir
     fprintf(out, "    mov eax, 4       ; sys_write\n");
     fprintf(out, "    mov ebx, 1       ; stdout\n");
     fprintf(out, "    mov ecx, buffer\n");
@@ -73,10 +67,7 @@ void generate_write(ASTNode* node, FILE* out, Trie* trie) {
 
 void generate_stmts(ASTNode* node, FILE* out, Trie* trie, int iter) {
     while(node) {
-        // fprintf(stderr, "\n iteracion: %d\n", iter);
-        // fprintf(stderr, " Node type before change in end of generate_stmts: %s\n", node_type_to_string(node->type));
         if (node->type != STMT_NODE) {
-            // Handle single statement
             switch(node->type) {
                 case ASSIGN_NODE: generate_assign(node, out, trie); break;
                 case READ_NODE: generate_read(node, out, trie); break;
@@ -88,7 +79,6 @@ void generate_stmts(ASTNode* node, FILE* out, Trie* trie, int iter) {
             break;
         }
         
-        // Handle statement sequence
         generate_stmts(node->stmt.first, out, trie, iter + 1);
         node = node->stmt.rest;
     }
@@ -101,13 +91,10 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
         exit(EXIT_FAILURE);
     }
 
-    // Cabecera del ensamblador
     fprintf(out, "section .data\n");
     
-    // Variables
-    for(int i = 0; i < (trie->firstIdx+1); i++) {
+    for(int i = 0; i < (trie->firstIdx+1); i++)
         fprintf(out, "var_%d: dd 0\n", i);
-    }
     
     fprintf(out, "buffer: times 20 db 0\n");
     fprintf(out, "newline: db 10\n\n");
@@ -115,7 +102,6 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fprintf(out, "section .text\n");
     fprintf(out, "global _start\n\n");
 
-    // Funciones de conversión
     fprintf(out, "atoi:\n");
     fprintf(out, "    xor eax, eax\n");
     fprintf(out, "    xor ecx, ecx\n");
@@ -148,16 +134,9 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fprintf(out, "    ret\n\n");
 
     fprintf(out, "_start:\n");
-
-    // ASTNode* act = node->stmt.first;
-    // while (act){
-    //     fprintf(stderr, "Processing node type: %s\n", node_type_to_string(act->type));
-    //     act = act->stmt.rest;
-    // }
     
     generate_stmts(node->stmt.first, out, trie, 1);
 
-    // Salida
     fprintf(out, "    mov eax, 1       ; sys_exit\n");
     fprintf(out, "    xor ebx, ebx\n");
     fprintf(out, "    int 0x80\n");
@@ -166,75 +145,37 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
 }
 
 void assemble_and_run(const char* asm_file) {
-    char obj_file[256];
-    char exec_file[256];
+    char obj_file[512];
+    char exec_file[512];
     
     snprintf(obj_file, sizeof(obj_file), "%s.o", asm_file);
     snprintf(exec_file, sizeof(exec_file), "%s.out", asm_file);
 
-    // 1. Ensamblar
     printf("Ensamblando %s...\n", asm_file);
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "nasm -felf32 %s -o %s", asm_file, obj_file);
-    int result = system(cmd);
-    if (result != 0) {
-        fprintf(stderr, "Error en ensamblado (código %d)\n", result);
+    char cmd[2048];
+    snprintf(cmd, sizeof(cmd), "nasm -f elf32 %s -o %s", asm_file, obj_file);
+    if (system(cmd) != 0) {
+        fprintf(stderr, "Error en ensamblado\n");
         return;
     }
 
-    // 2. Linkear
     printf("Linkeando %s...\n", obj_file);
     snprintf(cmd, sizeof(cmd), "ld -m elf_i386 %s -o %s", obj_file, exec_file);
-    result = system(cmd);
-    if (result != 0) {
-        fprintf(stderr, "Error en linking (código %d)\n", result);
+    if (system(cmd) != 0) {
+        fprintf(stderr, "Error en linking\n");
         return;
     }
 
-    // 3. Ejecutar
     printf("Ejecutando %s...\n", exec_file);
     snprintf(cmd, sizeof(cmd), "./%s", exec_file);
-    result = system(cmd);
+        
+    printf("Presione Enter para continuar...\n");
     
-    // 4. Mostrar resultado
-    printf("\nEl programa terminó con código %d\n", result);
-    
-    // 5. Opcional: Esperar entrada para pausar
-    printf("Presione Enter para continuar...");
-    getchar();
-
-    // char obj_file[256];
-    // char exec_file[256];
-    
-    // snprintf(obj_file, sizeof(obj_file), "%s.o", asm_file);
-    // snprintf(exec_file, sizeof(exec_file), "%s.out", asm_file);
-
-    // // Ensamblar
-    // char cmd[512];
-    // snprintf(cmd, sizeof(cmd), "nasm -felf32 %s -o %s", asm_file, obj_file);
-    // system(cmd);
-
-    // // Linkear
-    // snprintf(cmd, sizeof(cmd), "ld -m elf_i386 %s -o %s", obj_file, exec_file);
-    // system(cmd);
-
-    // // Ejecutar
-    // snprintf(cmd, sizeof(cmd), "./%s", exec_file);
-    // system(cmd);
-
-    
-
-
-    // NEW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-    // char cmd[512];
-    // snprintf(cmd, sizeof(cmd), "nasm %s -o compiled.o", asm_file);
-    // system(cmd);
-    // snprintf(cmd, sizeof(cmd), "ld -m elf_i386 compiled.o -o compiled.out");
-    // system(cmd);
-
-    // snprintf(cmd, sizeof(cmd), "./compiled.out; echo \"\\nProgram exited with $?\"");
-    // system(cmd);
-    // system("./compiled.out");
+    if(getchar() == '\n') {
+        system("clear");
+    } else {
+        fprintf(stderr, "Error al esperar la entrada\n");
+    }
 }
 
 const char* node_type_to_string(NodeType type) {
