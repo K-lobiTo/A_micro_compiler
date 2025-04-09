@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include "../include/parser.h"
+#include "../include/generate.h"
 #include "../include/io_utils.h"
 
 int main(char* argv[]) {
@@ -12,6 +13,7 @@ int main(char* argv[]) {
     char* source = read_stdin_to_end(&size);
     if (!source) {
         fprintf(stderr, "Error reading input\n");
+     
         return 1;
     }
     // char* source = argv[1];
@@ -23,7 +25,7 @@ int main(char* argv[]) {
     create_scanner(&scanner, source);
 
     
-    create_trie(&trie);
+    create_trie(&trie); 
     
     trie_insert(&trie, "begin", false, TOKEN_BEGIN);
     trie_insert(&trie, "end", false, TOKEN_END);
@@ -41,9 +43,8 @@ int main(char* argv[]) {
     ASTNode* ast = parse_program(&parser);
     printf("\n--- AST ---\n");
     print_ast(ast, 0);
-    // printf("\n %d \n", isspace('\0'));
 
-    //generate_code(ast);
+    generate_code(ast, &trie, "output.asm");
     
     return 0;
 }
