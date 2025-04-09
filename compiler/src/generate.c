@@ -56,19 +56,21 @@ void generate_write(ASTNode* node, FILE* out, Trie* trie) {
     fprintf(out, "    ;; WRITE\n");
     generate_expr(node->write.expr, out, trie);
     
-    // Convertir a string
+        
+    // Convert to string
     fprintf(out, "    call itoa\n");
+    fprintf(out, "    mov ecx, eax       ; String pointer\n");
+    fprintf(out, "    mov ebx, 1         ; stdout\n");
+    fprintf(out, "    mov eax, 4         ; sys_write\n");
+    fprintf(out, "    int 0x80           ; Output number\n");
     
-    // Calcular longitud
-    fprintf(out, "    mov edi, eax\n");
-    fprintf(out, "    sub edi, buffer\n");
-    
-    // Escribir
-    fprintf(out, "    mov eax, 4       ; sys_write\n");
-    fprintf(out, "    mov ebx, 1       ; stdout\n");
-    fprintf(out, "    mov ecx, buffer\n");
-    fprintf(out, "    mov edx, edi\n");
+    // Add newline
+    fprintf(out, "    mov eax, 4         ; sys_write\n");
+    fprintf(out, "    mov ebx, 1         ; stdout\n");
+    fprintf(out, "    mov ecx, newline\n");
+    fprintf(out, "    mov edx, 1         ; Length 1\n");
     fprintf(out, "    int 0x80\n");
+
 }
 
 void generate_stmts(ASTNode* node, FILE* out, Trie* trie, int iter) {
@@ -105,7 +107,7 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fprintf(out, "section .data\n");
     
     // Variables
-    for(int i = 0; i < (trie->firstIdx+1); i++) {
+    for(int i = 0; i < trie->firstIdx; i++) {
         fprintf(out, "var_%d: dd 0\n", i);
     }
     
@@ -132,6 +134,7 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fprintf(out, ".done:\n");
     fprintf(out, "    ret\n\n");
 
+    
     fprintf(out, "itoa:\n");
     fprintf(out, "    mov esi, buffer + 19\n");
     fprintf(out, "    mov byte [esi], 0\n");
@@ -145,19 +148,24 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fprintf(out, "    test eax, eax\n");
     fprintf(out, "    jnz .loop\n");
     fprintf(out, "    mov eax, esi\n");
+    fprintf(out, "    mov edx, buffer + 19\n");  // Calculate length
+    fprintf(out, "    sub edx, eax\n");
     fprintf(out, "    ret\n\n");
 
     fprintf(out, "_start:\n");
-
-    // ASTNode* act = node->stmt.first;
-    // while (act){
-    //     fprintf(stderr, "Processing node type: %s\n", node_type_to_string(act->type));
-    //     act = act->stmt.rest;
-    // }
     
     generate_stmts(node->stmt.first, out, trie, 1);
 
+    // Add pause before exit (Linux specific)
+    fprintf(out, "    ;; Wait for keypress\n");
+    fprintf(out, "    mov eax, 3       ; sys_read\n");
+    fprintf(out, "    mov ebx, 0       ; stdin\n");
+    fprintf(out, "    mov ecx, buffer  ; Dummy buffer\n");
+    fprintf(out, "    mov edx, 1       ; Read 1 byte\n");
+    fprintf(out, "    int 0x80\n");
+
     // Salida
+    fprintf(out, "    ;; Exit\n");
     fprintf(out, "    mov eax, 1       ; sys_exit\n");
     fprintf(out, "    xor ebx, ebx\n");
     fprintf(out, "    int 0x80\n");
