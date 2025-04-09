@@ -6,19 +6,8 @@
 #include "../include/trie.h"
 
 
-typedef struct {
-    char* name;
-    int index;
-    int used;
-} Variable;  
-
-Variable* variables = NULL;
-int var_count = 0;
-int current_index = 0;
-
-
 void generate_expr(ASTNode* node, FILE* out, Trie* trie) {
-    fprintf(stderr, "\n generate_expr : %s\n", node_type_to_string(node->type));
+    // fprintf(stderr, "\n generate_expr : %s\n", node_type_to_string(node->type));
     // fprintf(stderr, "%d\n", node->value);
     switch(node->type) {
         case ID_NODE: {
@@ -84,8 +73,8 @@ void generate_write(ASTNode* node, FILE* out, Trie* trie) {
 
 void generate_stmts(ASTNode* node, FILE* out, Trie* trie, int iter) {
     while(node) {
-        fprintf(stderr, "\n iteracion: %d\n", iter);
-        fprintf(stderr, " Node type before change in end of generate_stmts: %s\n", node_type_to_string(node->type));
+        // fprintf(stderr, "\n iteracion: %d\n", iter);
+        // fprintf(stderr, " Node type before change in end of generate_stmts: %s\n", node_type_to_string(node->type));
         if (node->type != STMT_NODE) {
             // Handle single statement
             switch(node->type) {
@@ -116,7 +105,7 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fprintf(out, "section .data\n");
     
     // Variables
-    for(int i = 0; i < current_index; i++) {
+    for(int i = 0; i < (trie->firstIdx+1); i++) {
         fprintf(out, "var_%d: dd 0\n", i);
     }
     
@@ -183,18 +172,69 @@ void assemble_and_run(const char* asm_file) {
     snprintf(obj_file, sizeof(obj_file), "%s.o", asm_file);
     snprintf(exec_file, sizeof(exec_file), "%s.out", asm_file);
 
-    // Ensamblar
+    // 1. Ensamblar
+    printf("Ensamblando %s...\n", asm_file);
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "nasm -felf32 %s -o %s", asm_file, obj_file);
-    system(cmd);
+    int result = system(cmd);
+    if (result != 0) {
+        fprintf(stderr, "Error en ensamblado (código %d)\n", result);
+        return;
+    }
 
-    // Linkear
+    // 2. Linkear
+    printf("Linkeando %s...\n", obj_file);
     snprintf(cmd, sizeof(cmd), "ld -m elf_i386 %s -o %s", obj_file, exec_file);
-    system(cmd);
+    result = system(cmd);
+    if (result != 0) {
+        fprintf(stderr, "Error en linking (código %d)\n", result);
+        return;
+    }
 
-    // Ejecutar
+    // 3. Ejecutar
+    printf("Ejecutando %s...\n", exec_file);
     snprintf(cmd, sizeof(cmd), "./%s", exec_file);
-    system(cmd);
+    result = system(cmd);
+    
+    // 4. Mostrar resultado
+    printf("\nEl programa terminó con código %d\n", result);
+    
+    // 5. Opcional: Esperar entrada para pausar
+    printf("Presione Enter para continuar...");
+    getchar();
+
+    // char obj_file[256];
+    // char exec_file[256];
+    
+    // snprintf(obj_file, sizeof(obj_file), "%s.o", asm_file);
+    // snprintf(exec_file, sizeof(exec_file), "%s.out", asm_file);
+
+    // // Ensamblar
+    // char cmd[512];
+    // snprintf(cmd, sizeof(cmd), "nasm -felf32 %s -o %s", asm_file, obj_file);
+    // system(cmd);
+
+    // // Linkear
+    // snprintf(cmd, sizeof(cmd), "ld -m elf_i386 %s -o %s", obj_file, exec_file);
+    // system(cmd);
+
+    // // Ejecutar
+    // snprintf(cmd, sizeof(cmd), "./%s", exec_file);
+    // system(cmd);
+
+    
+
+
+    // NEW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+    // char cmd[512];
+    // snprintf(cmd, sizeof(cmd), "nasm %s -o compiled.o", asm_file);
+    // system(cmd);
+    // snprintf(cmd, sizeof(cmd), "ld -m elf_i386 compiled.o -o compiled.out");
+    // system(cmd);
+
+    // snprintf(cmd, sizeof(cmd), "./compiled.out; echo \"\\nProgram exited with $?\"");
+    // system(cmd);
+    // system("./compiled.out");
 }
 
 const char* node_type_to_string(NodeType type) {
