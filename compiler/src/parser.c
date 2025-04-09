@@ -93,13 +93,36 @@ ASTNode* parse_write(Parser* p) {
 }
 
 ASTNode* parse_expr(Parser* p) {
-    ASTNode* left = parse_term(p);
-    while (p->current.type == TOKEN_PLUS) {
-        match(p, TOKEN_PLUS);
-        ASTNode* right = parse_term(p);
-        left = create_plus(left, right);
+    ASTNode* node;
+    
+    if (p->current.type == TOKEN_VALUE) {
+        node = create_value(atoi(p->current.lexeme));
+        match(p, TOKEN_VALUE);
+    } else if (p->current.type == TOKEN_ID) {
+        node = create_id(strdup(p->current.lexeme));
+        match(p, TOKEN_ID);
+    } else {
+        // Handle error [wating for feedback]
     }
-    return left;
+    
+    // Handle binary ops if present
+    while (p->current.type == TOKEN_PLUS) {
+        char op = p->current.lexeme[0];
+        match(p, p->current.type);
+        ASTNode* right = parse_expr(p);
+        node = create_plus(node, right);
+    }
+    
+    return node;
+
+    //Previous version just in case
+    // ASTNode* left = parse_term(p);
+    // while (p->current.type == TOKEN_PLUS) {
+    //     match(p, TOKEN_PLUS);
+    //     ASTNode* right = parse_term(p);
+    //     left = create_plus(left, right);
+    // }
+    // return left;
 }
 
 ASTNode* parse_term(Parser* p) {
