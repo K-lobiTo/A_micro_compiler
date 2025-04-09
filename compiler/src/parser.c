@@ -25,6 +25,10 @@ ASTNode* parse_program(Parser* p) {
 }
 
 ASTNode* parse_stmts(Parser* p) {
+    while (p->current.type == TOKEN_COMMENT ||
+            p->current.type == TOKEN_SEMICOLON)
+        p->current = next_token(p->scanner, p->trie);
+    
     if (p->current.type == TOKEN_ID || 
         p->current.type == TOKEN_READ || 
         p->current.type == TOKEN_WRITE) {
@@ -37,7 +41,7 @@ ASTNode* parse_stmts(Parser* p) {
 
 ASTNode* parse_stmt(Parser* p) {
     switch(p->current.type) {
-        case TOKEN_ID:   return parse_assignment(p);
+        case TOKEN_ID: return parse_assignment(p);
         case TOKEN_READ: return parse_read(p);
         case TOKEN_WRITE: return parse_write(p);
         default:
@@ -50,6 +54,13 @@ ASTNode* parse_assignment(Parser* p) {
     char* id = strdup(p->current.lexeme);
     match(p, TOKEN_ID);
     trie_insert(p->trie, id, true, TOKEN_ID);
+
+    if(p->current.type == TOKEN_SEMICOLON){
+        match(p, TOKEN_SEMICOLON);
+        ASTNode* zero = create_value(0);
+        return create_assign(id, zero);
+    }
+
     match(p, TOKEN_ASSIGN);
     ASTNode* expr = parse_expr(p);
     match(p, TOKEN_SEMICOLON);
