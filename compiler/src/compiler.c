@@ -16,11 +16,6 @@ int main(char* argv[]) {
      
         return 1;
     }
-    // char* source = argv[1];
-    // if (source == NULL) {
-    //     fprintf(stderr, "Error: No source code provided.\n");
-    //     return 1;
-    // }
     
     create_scanner(&scanner, source);
 
@@ -32,19 +27,15 @@ int main(char* argv[]) {
     trie_insert(&trie, "read", false, TOKEN_READ);
     trie_insert(&trie, "write", false, TOKEN_WRITE);
     
-    // Token actToken = {TOKEN_ERROR, {0}};
-    // while (actToken.type != TOKEN_EOF){ // for testing [works as expected]
-    //     actToken = next_token(&scanner, &trie);
-    //     printf("TokenType %s: Lexeme: %s\n", token_type_to_string(actToken.type), actToken.lexeme);
-    // }
-
     init_parser(&parser, &scanner, &trie);
     
     ASTNode* ast = parse_program(&parser);
     printf("\n--- AST ---\n");
     print_ast(ast, 0);
+    printf("\n--- END AST ---\n");
 
     generate_code(ast, &trie, "output.asm");
+    assemble_and_run("output.asm");
     
     return 0;
 }
