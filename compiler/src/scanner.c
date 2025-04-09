@@ -31,8 +31,7 @@ Token scan_identifier(Scanner* s, Trie* trie) {
     return token;
 }
 
-static Token process_comment(Scanner* s) {
-    advance(s);
+Token process_comment(Scanner* s) {
     while (peek(s) != '\n' && peek(s) != '\0') advance(s);
     return (Token){TOKEN_COMMENT, {0}};
 }
