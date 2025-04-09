@@ -1,0 +1,14 @@
+typedef enum TokenType {
+    TOKEN_BEGIN,
+    TOKEN_END,
+    TOKEN_READ,
+    TOKEN_WRITE,
+    TOKEN_ID,
+    TOKEN_VALUE,
+    TOKEN_ASSIGN,
+    TOKEN_PLUS,
+    TOKEN_SEMICOLON,
+    TOKEN_COMMENT,
+    TOKEN_ERROR,
+    TOKEN_EOF
+} TokenType;
