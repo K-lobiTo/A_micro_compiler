@@ -102,7 +102,8 @@ ASTNode* parse_expr(Parser* p) {
         node = create_id(strdup(p->current.lexeme));
         match(p, TOKEN_ID);
     } else {
-        // Handle error [wating for feedback]
+        fprintf(stderr, "Error: Token '%s' inválido en medio de una espresión\n", token_type_to_string(p->current.type));
+        exit(EXIT_FAILURE);
     }
     
     // Handle binary ops if present
