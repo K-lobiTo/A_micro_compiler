@@ -97,7 +97,7 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fprintf(out, "section .data\n");
     
     // Variables
-    for(int i = 0; i < trie->firstIdx; i++) {
+    for(int i = 0; i < trie->firstIdx; i++)
         fprintf(out, "var_%d: dd 0\n", i);
     
     fprintf(out, "buffer: times 20 db 0\n");
@@ -161,7 +161,7 @@ void generate_code(ASTNode* node, Trie* trie, const char* output_filename) {
     fclose(out);
 }
 
-void assemble_and_run(const char* asm_file) {
+void assemble_and_run(const char* asm_file){
     char obj_file[512];
     char exec_file[512];
     
@@ -184,15 +184,13 @@ void assemble_and_run(const char* asm_file) {
     }
 
     printf("Ejecutando %s...\n", exec_file);
-    snprintf(cmd, sizeof(cmd), "./%s", exec_file);
+    snprintf(cmd, sizeof(cmd), "'./%s'", exec_file);
+
         
-    printf("Presione Enter para continuar...\n");
-    
-    if(getchar() == '\n') {
-        system("clear");
-    } else {
-        fprintf(stderr, "Error al esperar la entrada\n");
-    }
+    printf("Presione Enter para continuar...\n");    
+
+    snprintf(cmd, sizeof(cmd), "clear; xterm -e './%s; echo \"\nProgram exited with $?\"; read -p \"Press Enter to close...\"'", exec_file);
+    system(cmd);
 }
 
 const char* node_type_to_string(NodeType type) {
