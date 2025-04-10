@@ -12,3 +12,4 @@
 #Ignore this extensions
 *.out
 *.o
+*.asm
